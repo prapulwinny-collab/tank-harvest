@@ -1,0 +1,19 @@
+
+{
+  "short_name": "ShrimpHarvest",
+  "name": "Shrimp Harvest Master",
+  "icons": [
+    {
+      "src": "https://cdn-icons-png.flaticon.com/512/2932/2932688.png",
+      "type": "image/png",
+      "sizes": "512x512",
+      "purpose": "any maskable"
+    }
+  ],
+  "start_url": ".",
+  "display": "standalone",
+  "theme_color": "#2563eb",
+  "background_color": "#f8fafc",
+  "orientation": "portrait",
+  "description": "Offline-first shrimp harvest tracking system."
+}
