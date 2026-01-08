@@ -17,3 +17,8 @@
   "orientation": "portrait",
   "description": "Offline-first shrimp harvest tracking system."
 }
+{
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone"
+}
