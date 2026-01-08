@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { Layout, Calculator, Settings, TableProperties, CloudSync, ChevronRight, CheckCircle2, Wifi, WifiOff, History, Loader2, Calendar, Banknote, ShieldCheck } from 'lucide-react';
 import { View, HarvestEntry, HarvestSettings, TankSummary } from './types';
 import { DBService } from './db';
@@ -21,6 +21,14 @@ const App: React.FC = () => {
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
   const [isInstalled, setIsInstalled] = useState(false);
 
+  // Get current date string (YYYY-MM-DD)
+  const today = useMemo(() => new Date().toISOString().split('T')[0], []);
+
+  // Separate active (today's) entries from historical ones
+  const activeEntries = useMemo(() => {
+    return entries.filter(e => e.timestamp.startsWith(today));
+  }, [entries, today]);
+
   const loadData = useCallback(async () => {
     try {
       const allEntries = await DBService.getAllEntries();
@@ -28,7 +36,7 @@ const App: React.FC = () => {
       setIsDbLoaded(true);
     } catch (err) {
       console.error("Failed to load harvest data:", err);
-      setIsDbLoaded(true); // Still set to true to allow user interaction
+      setIsDbLoaded(true); 
     }
   }, []);
 
@@ -226,7 +234,7 @@ const App: React.FC = () => {
         <div className="flex items-center gap-3">
           <div className="flex items-center gap-1.5 px-2 py-1 bg-green-50 rounded-lg text-green-600">
             <ShieldCheck className="w-3.5 h-3.5" />
-            <span className="text-[10px] font-black uppercase">Stored</span>
+            <span className="text-[10px] font-black uppercase tracking-tighter">Session: {today}</span>
           </div>
           {isOnline ? (
             <Wifi className="w-4 h-4 text-green-600" />
@@ -244,7 +252,7 @@ const App: React.FC = () => {
             onUpdateSettings={handleQuickUpdateSettings}
             onChangeTank={() => setCurrentView(View.CONTROL)} 
             lastSaved={lastSaved}
-            entries={entries}
+            entries={activeEntries} // Only today's entries for live display
           />
         )}
         {currentView === View.CONTROL && (
@@ -260,29 +268,36 @@ const App: React.FC = () => {
         )}
         {currentView === View.ABSTRACT && (
           <AbstractScreen 
-            entries={entries} 
+            entries={activeEntries} // Only today's entries
             prices={settings.tankPrices || {}} 
           />
         )}
         {currentView === View.LOG && (
           <LogScreen 
-            entries={entries} 
+            entries={activeEntries} // Only today's entries
             onDelete={handleDeleteEntry}
             onBatchDelete={handleBatchDelete}
             onUpdate={handleUpdateEntry} 
           />
         )}
-        {currentView === View.SYNC && <SyncManager entries={entries} settings={settings} onSyncComplete={loadData} />}
+        {currentView === View.SYNC && (
+          <SyncManager 
+            entries={entries} // Full database for sync
+            settings={settings} 
+            onSyncComplete={loadData} 
+            onUpdateSettings={handleQuickUpdateSettings} 
+          />
+        )}
         {currentView === View.HISTORY && (
           <HistoryScreen 
-            entries={entries} 
+            entries={entries} // Full database for historical archives
             prices={settings.tankPrices || {}}
             onDeleteDate={handleDeleteHistoryDate}
           />
         )}
         {currentView === View.REVENUE && (
           <RevenueScreen 
-            entries={entries} 
+            entries={activeEntries} // Revenue for today's session
             prices={settings.tankPrices || {}}
             onUpdatePrice={handleUpdatePrice}
           />
